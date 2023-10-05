@@ -205,7 +205,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                                                 return Text("${snapshot.data}");
                                               });
                                             }
-                                            return Text("Loading ***");
+                                            return Text("${snapshot}");
                                           },
                                         ),
                                       )))

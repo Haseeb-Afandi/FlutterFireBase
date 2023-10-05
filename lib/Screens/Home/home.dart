@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../Models/myFirebase.dart';
@@ -13,15 +15,26 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
-      children: [
-        FutureBuilder(
-          future: MyFirebase().fetchUsers(),
-          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-            return Text("$snapshot");
-          },
-        ),
-      ],
+        body: SizedBox(
+      width: 300,
+      height: 400,
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection('users').snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot data = snapshot.data!.docs[index];
+                    return ListTile(
+                      title: Text("name : ${data['name']}"),
+                      subtitle: Text("password : ${data['password']}"),
+                    );
+                  });
+            }
+
+            return CircularProgressIndicator();
+          }),
     ));
   }
 }
