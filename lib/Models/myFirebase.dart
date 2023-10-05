@@ -10,21 +10,53 @@ class MyFirebase {
 
   Future<String> addUser(String name, String email, String password) async {
     try {
-      try {
-        await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
-      } catch (e) {
-        return "Returns an Exception $e";
-      }
-      users.add({
-        'name': name,
-        'email': email,
-        'password': password,
-      });
+      await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then(((value) => {
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(value.user!.uid)
+                    .set({
+                  "email": email,
+                  "name": name,
+                  "password": password,
+                })
+              }));
 
       return "User added";
-    } catch (e) {
-      return "Returns an Exception $e";
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        return 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        return 'The account already exists for that email.';
+      } else {
+        return "Returns an Exception $e";
+      }
     }
+  }
+
+  Future<String> signIn(String email, String password) async {
+    try {
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      return "Sign-In Succesful";
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        return 'Wrong password provided for that user.';
+      } else {
+        return "There was an Exception: \n $e";
+      }
+    }
+  }
+
+  Future<String> fetchUsers() async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot =
+        await FirebaseFirestore.instance.collection("users").get();
+    final data = querySnapshot.docs.toList().toString();
+
+    return data;
   }
 }

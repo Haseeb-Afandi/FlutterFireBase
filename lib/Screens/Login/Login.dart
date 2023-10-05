@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../Models/myFirebase.dart';
+import '../Home/home.dart';
 import '../SignUp/Signup.dart';
 
 class Login extends StatefulWidget {
@@ -10,6 +12,9 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
   late AnimationController _controller;
   late Animation<Alignment> _topAlignmentAnimation;
   late Animation<Alignment> _bottomAlignmentAnimation;
@@ -74,7 +79,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   @override
   dispose() {
-    _controller.dispose(); // you need this
+    _controller.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
@@ -133,6 +140,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                               padding:
                                   const EdgeInsets.only(top: 8.0, left: 8.0),
                               child: TextField(
+                                controller: emailController,
                                 decoration: InputDecoration(hintText: "E-mail"),
                               ),
                             ),
@@ -150,6 +158,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                               padding:
                                   const EdgeInsets.only(top: 8.0, left: 8.0),
                               child: TextField(
+                                controller: passwordController,
                                 decoration:
                                     InputDecoration(hintText: "Password"),
                               ),
@@ -159,7 +168,48 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                         Padding(
                           padding: const EdgeInsets.only(top: 30.0),
                           child: FloatingActionButton.extended(
-                            onPressed: () {},
+                            onPressed: () => {
+                              showDialog(
+                                  context: context,
+                                  builder: ((context) => AlertDialog(
+                                        content: FutureBuilder(
+                                          future: MyFirebase().signIn(
+                                              emailController.text,
+                                              passwordController.text),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.data ==
+                                                "Sign-In Succesful") {
+                                              Future.delayed(Duration.zero, () {
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const Home()));
+                                                return Text(
+                                                    "Signed in succesfully!");
+                                              });
+                                            } else if (snapshot.data ==
+                                                "No user found for that email.") {
+                                              Future.delayed(Duration.zero, () {
+                                                return Text(
+                                                    "No user found for that email.");
+                                              });
+                                            } else if (snapshot.data ==
+                                                "Wrong password provided for that user.") {
+                                              Future.delayed(Duration.zero, () {
+                                                return Text(
+                                                    "Wrong password provided for that user.");
+                                              });
+                                            } else {
+                                              Future.delayed(Duration.zero, () {
+                                                return Text("${snapshot.data}");
+                                              });
+                                            }
+                                            return Text("Loading ***");
+                                          },
+                                        ),
+                                      )))
+                            },
                             label: Text(
                               "Login",
                             ),
